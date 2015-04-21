@@ -11,7 +11,11 @@ HOLY CRAP!  LOOK AT ALL ONE LINE OF CODE!  Apple apparently didn't learn the con
 
 ## Version Details
 
-### Version 1
+### Version 0.2a
+
+Added ability to have int, float and boolean values in objects and lists.
+
+### Version 0.1a
 
 Doesn't have any form of validation.  This will be accomplished by running a preliminary scan across the JSON object and then examining the processing stack to ensure it's empty (i.e. that all opening braces and quotation marks have been closed) then finally throwing errors as it parses if it discovers an invalid data type (like an unquoted string other than "true", "false" or a number.
 

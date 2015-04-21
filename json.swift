@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  JSON Parser
+//  JSON Parser v 0.1a
 //
 //  Created by Michael Main on 4/17/15.
 //  Copyright (c) 2015 Michael Main. All rights reserved.
@@ -10,6 +10,26 @@
 
 import Foundation
 
+// Borrowed from http://benscheirman.com/2014/06/regex-in-swift/
+// TODO Replace this later
+class Regex {
+    let internalExpression: NSRegularExpression
+    let pattern: String
+    
+    init(_ pattern: String) {
+        self.pattern = pattern
+        var error: NSError?
+        self.internalExpression = NSRegularExpression(pattern: pattern, options: .CaseInsensitive, error: &error)!
+    }
+    
+    func test(input: String) -> Bool {
+        let matches = self.internalExpression.matchesInString(input, options: nil, range:NSMakeRange(0, count(input)))
+        return matches.count > 0
+    }
+}
+
+
+// Needed to process opening and closing braces
 struct Stack<T> {
     var items = [T]()
     mutating func push(item: T) {
@@ -38,12 +58,16 @@ struct Stack<T> {
     }
 }
 
+// A JSON parser that uses the default String type in Swift
 class JSON {
     enum JsonType {
         case NONE
         case OBJECT
         case LIST
         case STRING
+        case INT
+        case FLOAT
+        case BOOL
     }
     
     enum ParserState {
@@ -53,11 +77,9 @@ class JSON {
         case SEARCHING_SEPERATOR
         case SEARCHING_VALUE
         case READING_STRING_VALUE
-        case READING_INT_VALUE
-        case READING_BOOL_VALUE
+        case READING_NON_STRING_VALUE
         case READING_OBJECT_VALUE
         case READING_LIST_VALUE
-        case STORING
     }
     
     class Parser {
@@ -106,6 +128,9 @@ class JSON {
                         list.append(parseJsonList(expression))
                         value = ""
                         state = ParserState.SEARCHING_NEXT
+                    } else if (c != " " && c != "\t") {
+                        value.append(c)
+                        state = ParserState.READING_NON_STRING_VALUE
                     }
                     break
                 case .READING_STRING_VALUE:
@@ -117,16 +142,41 @@ class JSON {
                     }
                     value.append(c)
                     break
-                case .READING_INT_VALUE:
-                    break
-                case .READING_BOOL_VALUE:
+                case .READING_NON_STRING_VALUE:
+                    if (i == jsonString.count - 1) {
+                        value.append(c)
+                        c = ","
+                    }
+                    
+                    if (c == ",") {
+                        var type = determineType(String(value).stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
+                        switch (type) {
+                        case .INT:
+                            list.append((value as NSString).integerValue)
+                            break
+                        case .FLOAT:
+                            list.append((value as NSString).floatValue)
+                            break
+                        case .BOOL:
+                            list.append((value as NSString).boolValue)
+                            break
+                        case .STRING:
+                            list.append(value)
+                            break
+                        default:
+                            return Array()
+                        }
+                        
+                        value = ""
+                        state = ParserState.INIT
+                        continue
+                    }
+                    value.append(c)
                     break
                 case .SEARCHING_NEXT:
-                    if (c == ",") {
+                    if (c == "," ) {
                         state = ParserState.INIT
                     }
-                    break
-                case .STORING:
                     break
                 default:
                     break
@@ -190,6 +240,9 @@ class JSON {
                         key = ""
                         value = ""
                         state = ParserState.SEARCHING_NEXT
+                    } else if (c != " " && c != "\t") {
+                        value.append(c)
+                        state = ParserState.READING_NON_STRING_VALUE
                     }
                     break
                 case .READING_STRING_VALUE:
@@ -202,11 +255,38 @@ class JSON {
                     }
                     value.append(c)
                     break
-                case .READING_INT_VALUE:
-                    break
-                case .READING_BOOL_VALUE:
-                    break
-                case .STORING:
+                case .READING_NON_STRING_VALUE:
+                    if (i == jsonString.count - 1) {
+                        value.append(c)
+                        c = ","
+                    }
+                    
+                    if (c == ",") {
+                        var type = determineType(String(value).stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
+                        switch (type) {
+                        case .INT:
+                            object[key] = (value as NSString).integerValue
+                            break
+                        case .FLOAT:
+                            object[key] = (value as NSString).floatValue
+                            break
+                        case .BOOL:
+                            object[key] = (value as NSString).boolValue
+                            break
+                        case .STRING:
+                            object[key] = value
+                            break
+                        default:
+                            return Dictionary()
+                        }
+                        
+                        // Store the value if valid
+                        key = ""
+                        value = ""
+                        state = ParserState.INIT
+                        continue
+                    }
+                    value.append(c)
                     break
                 default:
                     break;
@@ -228,7 +308,6 @@ class JSON {
                 if (objectStarted) {
                     jsonSubString.append(c)
                 }
-                //println(c)
                 
                 if (c == "{") {
                     if (!objectStarted) {
@@ -259,13 +338,31 @@ class JSON {
                 }
                 
                 if (objectStarted && typeStack.isEmpty()) {
-                    //println("\tDONE")
                     jsonSubString.removeLast()
                     return (i, jsonSubString, type)
                 }
             }
             
             return (-1, Array(), JsonType.NONE)
+        }
+        
+        private class func determineType(value: String) -> JsonType {
+            var intRegex = "^[0-9]+$"
+            var floatRegex = "^[0-9]+\\.+[0-9]+$"
+            var boolRegex = "^(true|false)$"
+            var stringRegex = "^\".*\"$"
+            
+            if (Regex(floatRegex).test(value)) {
+                return JsonType.FLOAT
+            } else if (Regex(intRegex).test(value)) {
+                return JsonType.INT
+            } else if (Regex(boolRegex).test(value)) {
+                return JsonType.BOOL
+            } else if (Regex(stringRegex).test(value)) {
+                return JsonType.STRING
+            } else {
+                return JsonType.NONE
+            }
         }
     }
     
@@ -282,14 +379,14 @@ class JSON {
             for (key, value) in json {
                 tabs(level)
                 print("\(key) => ")
-                if (value is String) {
-                    println(value)
-                } else if (value is Array<Any>) {
+                if (value is Array<Any>) {
                     println()
                     printJsonList(json: value as! Array<Any>, level: level + 1)
                 } else if (value is Dictionary<String, Any>) {
                     println()
                     printJsonObject(json: value as! Dictionary<String, Any>, level: level + 1)
+                } else {
+                    println(value)
                 }
             }
         }
@@ -298,14 +395,14 @@ class JSON {
             for (index, value) in enumerate(json) {
                 tabs(level)
                 print("[\(index)] => ")
-                if (value is String) {
-                    println(value)
-                } else if (value is Array<Any>) {
+                if (value is Array<Any>) {
                     println()
                     printJsonList(json: value as! Array<Any>, level: level + 1)
                 } else if (value is Dictionary<String, Any>) {
                     println()
                     printJsonObject(json: value as! Dictionary<String, Any>, level: level + 1)
+                } else {
+                    println(value)
                 }
             }
         }
