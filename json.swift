@@ -29,7 +29,7 @@ class Regex {
 }
 
 
-// Needed to process opening and closing braces
+// Needed to keep track of blob depth
 struct Stack<T> {
     var items = [T]()
     mutating func push(item: T) {
@@ -59,7 +59,7 @@ struct Stack<T> {
 }
 
 // A JSON parser that uses the default String type in Swift
-class JSON {
+class NBJSON {
     enum JsonType {
         case NONE
         case OBJECT
@@ -96,7 +96,6 @@ class JSON {
             } else if (type == JsonType.LIST) {
                 return parseJsonList(expression)
             }
-            
             
             return nil
         }

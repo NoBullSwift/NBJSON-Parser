@@ -10,5 +10,5 @@ import Foundation
 
 var jsonString : String = "{\"name\": \"Michael\", \"age\": 32, \"pi\": 3.14, \"isRegistered\": true, \"dogs\": [{\"name\": \"Dixie\", \"color\": \"black\"}, {\"name\": \"Sparky\", \"color\": \"black\"}], \"colors\": [\"pink\", \"blue\", \"black\"], \"object\": {\"type\": \"string\", \"value\": \"This is a string\"}, \"list\": [\"string\", 12, 3.14, false], \"lastItem\": 1234}"
 
-var json = JSON.Parser.parseJson(jsonString)!
-JSON.Utils.printJson(json)
+var json = NBJSON.Parser.parseJson(jsonString)!
+NBJSON.Utils.printJson(json)
