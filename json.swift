@@ -62,6 +62,7 @@ struct Stack<T> {
 class NBJSON {
     enum JsonType {
         case NONE
+        case NULL
         case OBJECT
         case LIST
         case STRING
@@ -160,6 +161,9 @@ class NBJSON {
                             list.append((value as NSString).boolValue)
                             break
                         case .STRING:
+                            list.append(value)
+                            break
+                        case .NULL:
                             list.append(value)
                             break
                         default:
@@ -275,6 +279,9 @@ class NBJSON {
                         case .STRING:
                             object[key] = value
                             break
+                        case .NULL:
+                            object[key] = nil
+                            break
                         default:
                             return Dictionary()
                         }
@@ -349,6 +356,7 @@ class NBJSON {
             var intRegex = "^[0-9]+$"
             var floatRegex = "^[0-9]+\\.+[0-9]+$"
             var boolRegex = "^(true|false)$"
+            var nullRegex = "^null$"
             var stringRegex = "^\".*\"$"
             
             if (Regex(floatRegex).test(value)) {
@@ -359,6 +367,8 @@ class NBJSON {
                 return JsonType.BOOL
             } else if (Regex(stringRegex).test(value)) {
                 return JsonType.STRING
+            } else if (Regex(nullRegex).test(value)) {
+                return JsonType.NULL
             } else {
                 return JsonType.NONE
             }
@@ -413,4 +423,3 @@ class NBJSON {
         }
     }
 }
-
