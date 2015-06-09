@@ -11,6 +11,10 @@ HOLY CRAP!  LOOK AT ALL ONE LINE OF CODE!  Apple apparently didn't learn the con
 
 ## Version Details
 
+### Version 0.3a
+
+Added null objects
+
 ### Version 0.2a
 
 Added ability to have int, float and boolean values in objects and lists.
