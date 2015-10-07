@@ -11,6 +11,10 @@ HOLY CRAP!  LOOK AT ALL ONE LINE OF CODE!  Apple apparently didn't learn the con
 
 ## Version Details
 
+### Version 0.4a
+
+Added a stringify function to allow conversion of a map to a JSON String
+
 ### Version 0.3a
 
 Added null objects
