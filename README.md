@@ -22,7 +22,7 @@ And once again, poof...done!  You give it an Array or a Dictionary and you get a
 
 Once you have an object back from JSON.Parser.parseJson, you can use a util function to access data at a certain "path" by doing the following:
 
-    var dogName = NBJSON.Utils.search("/dogs[1]/name") as! String
+    var dogName = NBJSON.Utils.search("/dogs[1]/name", object) as! String
     
 Assuming you had the following data that was deserialized:
 
@@ -39,7 +39,7 @@ Assuming you had the following data that was deserialized:
         ]
     }
     
-Dog name would now contain "Sparky".  In future versions we will make this feature stronger.  For now it just functions as a means of getting to deeply nested data more easily.
+The "dogName" variable would now contain "Sparky".  In future versions we will make this feature stronger.  For now it just functions as a means of getting to deeply nested data more easily.
 
 ## Version Details
 
