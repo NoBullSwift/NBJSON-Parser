@@ -59,6 +59,11 @@ struct Stack<T> {
     }
 }
 
+protocol NBObjectMapper {
+    func serialize(object:Any) -> String
+    func deserialize(str:String) -> Any
+}
+
 // A JSON parser that uses the default String type in Swift
 class NBJSON {
     enum JsonType {
@@ -90,6 +95,22 @@ class NBJSON {
     
     class Demarshaller {
         
+    }
+    
+    class NBOJSONbjectMapper : NBObjectMapper {
+        func deserialize(str: String) -> Any {
+            return Parser.parseJson(str)
+        }
+        
+        func serialize(object: Any) -> String {
+            if (object is NSArray) {
+                return Parser.stringify(object as! NSArray)
+            } else if (object is NSDictionary) {
+                return Parser.stringify(object as! NSDictionary)
+            } else {
+                return ""
+            }
+        }
     }
     
     class Parser {
@@ -168,7 +189,7 @@ class NBJSON {
             var index : Int
             var expression : Array<Character>
             
-            for var i = 0; i < jsonString.count; i++ {
+            for var i = 0; i < jsonString.count; i += 1 {
                 var c = jsonString[i]
                 
                 switch (state) {
@@ -257,7 +278,7 @@ class NBJSON {
             var index : Int
             var expression : Array<Character>
             
-            for var i = 0; i < jsonString.count; i++ {
+            for var i = 0; i < jsonString.count; i += 1 {
                 var c = jsonString[i]
                 
                 switch (state) {
@@ -367,7 +388,7 @@ class NBJSON {
             var objectStarted = false
             var type : JsonType = JsonType.NONE;
             
-            for var i = index; i < jsonString.count; i++ {
+            for i in index ..< jsonString.count {
                 let c = jsonString[i]
                 
                 if (objectStarted) {
@@ -435,49 +456,49 @@ class NBJSON {
     }
     
     class Utils {
-        class func printJson(json: Any) {
-            if (json is Dictionary<String, Any>) {
-                printJsonObject(json: json as! Dictionary<String, Any>)
-            } else if (json is Array<Any>) {
-                printJsonList(json: json as! Array<Any>)
+        class func printObject(object: Any) {
+            if (object is Dictionary<String, Any>) {
+                printMap(object: object as! Dictionary<String, Any>)
+            } else if (object is Array<Any>) {
+                printList(object: object as! Array<Any>)
             }
         }
         
-        private class func printJsonObject(json json: Dictionary<String, Any>, level: Int = 0) {
-            for (key, value) in json {
+        private class func printMap(object object: Dictionary<String, Any>, level: Int = 0) {
+            for (key, value) in object {
                 tabs(level)
-                print("\(key) => ")
+                print("\(key) => ", terminator:"")
                 if (value is Array<Any>) {
-                    print("\n")
-                    printJsonList(json: value as! Array<Any>, level: level + 1)
+                    print()
+                    printList(object: value as! Array<Any>, level: level + 1)
                 } else if (value is Dictionary<String, Any>) {
-                    print("\n")
-                    printJsonObject(json: value as! Dictionary<String, Any>, level: level + 1)
+                    print()
+                    printMap(object: value as! Dictionary<String, Any>, level: level + 1)
                 } else {
                     print(value)
                 }
             }
         }
         
-        private class func printJsonList(json json: Array<Any>, level: Int = 0) {
-            for (index, value) in json.enumerate() {
+        private class func printList(object object: Array<Any>, level: Int = 0) {
+            for (index, value) in object.enumerate() {
                 tabs(level)
-                print("[\(index)] => ")
+                print("[\(index)] => ", terminator:"")
                 if (value is Array<Any>) {
-                    print("\n")
-                    printJsonList(json: value as! Array<Any>, level: level + 1)
+                    print()
+                    printList(object: value as! Array<Any>, level: level + 1)
                 } else if (value is Dictionary<String, Any>) {
-                    print("\n")
-                    printJsonObject(json: value as! Dictionary<String, Any>, level: level + 1)
+                    print()
+                    printMap(object: value as! Dictionary<String, Any>, level: level + 1)
                 } else {
-                    print("\n")
+                    print()
                 }
             }
         }
         
         private class func tabs(amount: Int) {
-            for var i = 0; i < amount; i++ {
-                print("\t")
+            for _ in 0 ..< amount {
+                print("\t", terminator:"")
             }
         }
     }

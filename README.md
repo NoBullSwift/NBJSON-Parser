@@ -2,14 +2,23 @@
 
 ## What is NBJSON-Parser
 
-This is a No Bullshit JSON-Parser.  I felt the typical Swift way of parsing JSON was about as Swift as taking a shit after consuming the whole dairy section at HEB (assuming you aren't lactose intolerant).  Converting from String to NSString to NSData just to parse JSON is bullshit...so I fixed that.  Still a WIP...but still a hell of a lot better than the default way of doing so.  Do keep in mind however that this will only work on regular ASCII strings (why the hell would you try to send non-ascii string as JSON blobs is beyond me).
+No Bull JSON Parser.  Simple, easy to use, JSON parser written entirely in Swift.
 
 ## How to Use
-    var json = JSON.Parser.parseJson(stringVariable)
+    
+    var object = JSON.Parser.parseJson(string)
 
-HOLY CRAP!  LOOK AT ALL ONE LINE OF CODE!  Apple apparently didn't learn the concept of KISS.
+And you're done.  You are given an Any type object that can be either a Dictionary<String,Any> or an Array<Any>.
+
+    var string = JSON.Parser.stringify(object)
+    
+And once again, poof...done!  You give it an Array or a Dictionary and you get a JSON string back.  We are working on adding object mapping abilities, but Swift's reflection support is mediocore at best right now.
 
 ## Version Details
+
+### Version 1.0
+
+Changed a few names around and added an adapter for use by NBRest's object mapping system
 
 ### Version 0.4a
 
