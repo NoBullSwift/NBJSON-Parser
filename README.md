@@ -5,14 +5,41 @@
 No Bull JSON Parser.  Simple, easy to use, JSON parser written entirely in Swift.
 
 ## How to Use
+
+### Deserialization
     
-    var object = JSON.Parser.parseJson(string)
+    var object = NBJSON.Parser.parseJson(string)
 
 And you're done.  You are given an Any type object that can be either a Dictionary<String,Any> or an Array<Any>.
 
-    var string = JSON.Parser.stringify(object)
+### Serialization
+
+    var string = NBJSON.Parser.stringify(object)
     
 And once again, poof...done!  You give it an Array or a Dictionary and you get a JSON string back.  We are working on adding object mapping abilities, but Swift's reflection support is mediocore at best right now.
+
+### Accessing Elements By Path
+
+Once you have an object back from JSON.Parser.parseJson, you can use a util function to access data at a certain "path" by doing the following:
+
+    var dogName = NBJSON.Utils.search("/dogs[1]/name") as! String
+    
+Assuming you had the following data that was deserialized:
+
+    {
+        dogs: [
+            {
+                color: "Black",
+                name: "Dixie"
+            },
+            {
+                color: "Brown",
+                name: "Sparky"
+            }
+        ]
+    }
+    
+Dog name would now contain "Sparky".  In future versions we will make this feature stronger.  For now it just functions as a means of getting to deeply nested data more easily.
 
 ## Version Details
 
