@@ -16,6 +16,10 @@ And once again, poof...done!  You give it an Array or a Dictionary and you get a
 
 ## Version Details
 
+### Version 1.1
+
+Added light, reduced feature set xpath like searching for complex dictionaries
+
 ### Version 1.0
 
 Changed a few names around and added an adapter for use by NBRest's object mapping system

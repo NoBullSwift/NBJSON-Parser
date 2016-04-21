@@ -456,40 +456,89 @@ class NBJSON {
     }
     
     class Utils {
-        class func printObject(object: Any) {
+        class func search(path: String, object: Any) -> Any! {
+            let pathComponents : Array<String> = path.componentsSeparatedByString("/")
+            var currentNode : Any = object
+            
+            for pathComponent in pathComponents {
+                if (pathComponent.isEmpty) {
+                    continue
+                }
+                
+                let indexStart = pathComponent.characters.indexOf("[")
+                let indexEnd   = pathComponent.characters.indexOf("]")
+                
+                if (indexStart != nil && indexEnd != nil) {
+                    let pathComponentName = pathComponent.substringToIndex(indexStart!)
+                    let pathComponentIndex = pathComponent.substringWithRange((indexStart!.advancedBy(1)..<indexEnd!))
+                    
+                    if (!pathComponentName.isEmpty) {
+                        // Go to dictionary entry
+                        if (!(currentNode is Dictionary<String, Any>)) {
+                            return nil
+                        }
+                    
+                    
+                        let d = currentNode as! Dictionary<String, Any>
+                        currentNode = d[pathComponentName]
+                    }
+                    
+                    
+                    // Go to array element
+                    if (!(currentNode is Array<Any>)) {
+                        return nil
+                    }
+                    
+                    let a = currentNode as! Array<Any>
+                    currentNode = a[(pathComponentIndex as NSString).integerValue]
+                } else {
+                    // Go to dictionary entry
+                    if (!(currentNode is Dictionary<String, Any>)) {
+                        return nil
+                    }
+                    
+                    let d = currentNode as! Dictionary<String, Any>
+                    currentNode = d[pathComponent]
+                }
+            }
+            
+            return currentNode
+        }
+        
+        class func printObject(object: Any, printTabs: Int = 0) {
             if (object is Dictionary<String, Any>) {
-                printMap(object: object as! Dictionary<String, Any>)
+                printMap(object: object as! Dictionary<String, Any>, printTabs: printTabs)
             } else if (object is Array<Any>) {
-                printList(object: object as! Array<Any>)
+                printList(object: object as! Array<Any>, printTabs: printTabs)
             }
         }
         
-        private class func printMap(object object: Dictionary<String, Any>, level: Int = 0) {
+        private class func printMap(object object: Dictionary<String, Any>, printTabs: Int = 0) {
             for (key, value) in object {
-                tabs(level)
+                tabs(printTabs)
                 print("\(key) => ", terminator:"")
                 if (value is Array<Any>) {
                     print()
-                    printList(object: value as! Array<Any>, level: level + 1)
+                    printList(object: value as! Array<Any>, printTabs: printTabs + 1)
                 } else if (value is Dictionary<String, Any>) {
                     print()
-                    printMap(object: value as! Dictionary<String, Any>, level: level + 1)
+                    printMap(object: value as! Dictionary<String, Any>, printTabs: printTabs + 1)
                 } else {
                     print(value)
                 }
             }
         }
         
-        private class func printList(object object: Array<Any>, level: Int = 0) {
+        private class func printList(object object: Array<Any>, printTabs: Int = 0) {
             for (index, value) in object.enumerate() {
-                tabs(level)
+                tabs(printTabs)
                 print("[\(index)] => ", terminator:"")
                 if (value is Array<Any>) {
                     print()
-                    printList(object: value as! Array<Any>, level: level + 1)
+                    printList(object: value as! Array<Any>, printTabs: printTabs + 1)
                 } else if (value is Dictionary<String, Any>) {
                     print()
-                    printMap(object: value as! Dictionary<String, Any>, level: level + 1)
+                    printMap(object: value as! Dictionary<String, Any>, printTabs: printTabs + 1)
                 } else {
                     print()
                 }
