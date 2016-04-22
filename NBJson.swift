@@ -64,6 +64,11 @@ protocol NBObjectMapper {
     func deserialize(str:String) -> Any
 }
 
+protocol NBMappable {
+    func serialize() -> Dictionary<String, Any>
+    func deserialize(map: Dictionary<String, Any>)
+}
+
 // A JSON parser that uses the default String type in Swift
 class NBJSON {
     enum JsonType {
@@ -99,31 +104,34 @@ class NBJSON {
     
     class NBOJSONbjectMapper : NBObjectMapper {
         func deserialize(str: String) -> Any {
-            return Parser.parseJson(str)
+            return Parser.deserialize(str)
         }
         
         func serialize(object: Any) -> String {
-            if (object is NSArray) {
-                return Parser.stringify(object as! NSArray)
-            } else if (object is NSDictionary) {
-                return Parser.stringify(object as! NSDictionary)
-            } else {
-                return ""
-            }
+            return Parser.serialize(object)
         }
     }
     
     class Parser {
-        class func stringify(dictionary : NSDictionary) -> String {
+        class func serialize(object: Any) -> String {
+            if (object is Dictionary<String, Any>) {
+                return serialize(object as! Dictionary<String, Any>)
+            } else if (object is Array<Any>) {
+                return serialize(object as! Array<Any>)
+            }
+            return ""
+        }
+        
+        private class func serialize(dictionary : Dictionary<String, Any>) -> String {
             var jsonString : String;
             var seperator : String = ""
             
             jsonString = "{";
             for (key, value) in dictionary {
-                if (value is NSArray) {
-                    jsonString += "\(seperator)\"\(key)\":\(stringify(value as! NSArray))"
-                } else if (value is NSDictionary) {
-                    jsonString += "\(seperator)\"\(key)\":\(stringify(value as! NSDictionary))"
+                if (value is Array<Any>) {
+                    jsonString += "\(seperator)\"\(key)\":\(serialize(value as! Array<Any>))"
+                } else if (value is Dictionary<String, Any>) {
+                    jsonString += "\(seperator)\"\(key)\":\(serialize(value as! Dictionary<String, Any>))"
                 } else if (value is String) {
                     jsonString += "\(seperator)\"\(key)\":\"\(value)\""
                 } else if (value is Int || value is Float || value is Double) {
@@ -139,16 +147,16 @@ class NBJSON {
             return jsonString
         }
         
-        class func stringify(list : NSArray) -> String {
+        private class func serialize(list : Array<Any>) -> String {
             var jsonString : String;
             var seperator : String = ""
             
-            jsonString = "{";
+            jsonString = "[";
             for value in list {
-                if (value is NSArray) {
-                    jsonString += stringify(value as! NSArray)
-                } else if (value is NSDictionary) {
-                    jsonString += stringify(value as! NSDictionary)
+                if (value is Array<Any>) {
+                    jsonString += "\(seperator)\(serialize(value as! Array<Any>))"
+                } else if (value is Dictionary<String, Any>) {
+                    jsonString += "\(seperator)\(serialize(value as! Dictionary<String, Any>))"
                 } else if (value is String) {
                     jsonString += "\(seperator)\"\(value)\""
                 } else if (value is Int || value is Float || value is Double) {
@@ -159,12 +167,25 @@ class NBJSON {
                 }
                 seperator = ","
             }
-            jsonString += "}"
+            jsonString += "]"
             
             return jsonString
         }
         
-        class func parseJson(jsonString : String) -> Any? {
+        class func serialize(object: NBMappable) -> String {
+            return serialize(object.serialize())
+        }
+        
+        class func serialize(list: Array<NBMappable>) -> String {
+            var array : Array<Any> = Array<Any>()
+            for mappable in list {
+                array.append(mappable.serialize())
+            }
+            
+            return serialize(array)
+        }
+        
+        class func deserialize(jsonString : String) -> Any? {
             let jsonStringArray : Array<Character> = Array(jsonString.characters)
             var index : Int
             var expression : Array<Character>
@@ -179,6 +200,17 @@ class NBJSON {
             }
             
             return nil
+        }
+        
+        class func deserialize(jsonString: String, deserializeInto: NBMappable) -> NBMappable? {
+            let object : Any = deserialize(jsonString)
+            
+            if (object is Dictionary<String, Any>) {
+                deserializeInto.deserialize(object as! Dictionary<String, Any>)
+                return deserializeInto
+            } else {
+                return nil
+            }
         }
         
         private class func parseJsonList(jsonString : Array<Character>) -> Array<Any> {
@@ -540,7 +572,7 @@ class NBJSON {
                     print()
                     printMap(object: value as! Dictionary<String, Any>, printTabs: printTabs + 1)
                 } else {
-                    print()
+                    print(value)
                 }
             }
         }
